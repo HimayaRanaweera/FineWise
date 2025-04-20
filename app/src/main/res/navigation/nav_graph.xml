@@ -1,18 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/nav_home">
+    app:startDestination="@id/fragment_home">
 
     <fragment
-        android:id="@+id/nav_home"
+        android:id="@+id/fragment_home"
         android:name="com.example.finewise.ui.main.HomeFragment"
-        android:label="Home" />
+        android:label="Home">
+        <action
+            android:id="@+id/action_home_to_edit_transaction"
+            app:destination="@id/fragment_edit_transaction"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+    </fragment>
+
     <fragment
-        android:id="@+id/nav_analysis"
+        android:id="@+id/fragment_analysis"
         android:name="com.example.finewise.ui.analysis.AnalysisFragment"
         android:label="Analysis" />
+
     <fragment
-        android:id="@+id/nav_budget"
+        android:id="@+id/fragment_budget"
         android:name="com.example.finewise.ui.budget.BudgetFragment"
         android:label="Budget" />
+
+    <fragment
+        android:id="@+id/fragment_edit_transaction"
+        android:name="com.example.finewise.ui.transaction.EditTransactionFragment"
+        android:label="Edit Transaction">
+        <argument
+            android:name="transaction"
+            app:argType="com.example.finewise.model.Transaction" />
+    </fragment>
+
 </navigation>

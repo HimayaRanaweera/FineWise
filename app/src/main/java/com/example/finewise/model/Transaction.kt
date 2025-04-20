@@ -1,8 +1,10 @@
 package com.example.finewise.model
 
-import java.io.Serializable
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 
+@Parcelize
 data class Transaction(
     val id: Int,
     val title: String,
@@ -10,4 +12,4 @@ data class Transaction(
     val category: String,
     val date: Date,
     val isIncome: Boolean
-) : Serializable
+) : Parcelable
