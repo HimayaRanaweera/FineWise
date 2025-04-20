@@ -1,0 +1,18 @@
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.finewise.ui.main.HomeFragment"
+        android:label="Home" />
+    <fragment
+        android:id="@+id/nav_analysis"
+        android:name="com.example.finewise.ui.analysis.AnalysisFragment"
+        android:label="Analysis" />
+    <fragment
+        android:id="@+id/nav_budget"
+        android:name="com.example.finewise.ui.budget.BudgetFragment"
+        android:label="Budget" />
+</navigation>

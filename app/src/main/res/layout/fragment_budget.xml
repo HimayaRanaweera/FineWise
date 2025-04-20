@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/et_budget"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Monthly Budget"
+        android:inputType="numberDecimal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_set_budget"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Set Budget"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_budget" />
+
+    <TextView
+        android:id="@+id/tv_budget_status"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Budget: $0.00\nSpent: $0.00\nRemaining: $0.00"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_set_budget" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
