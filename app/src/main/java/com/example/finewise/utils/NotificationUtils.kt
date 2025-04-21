@@ -40,7 +40,7 @@ object NotificationUtils {
         if (!hasNotificationPermission(context)) return
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_logo)
+            .setSmallIcon(R.drawable.logo)
             .setContentTitle("Budget Exceeded")
             .setContentText("You've exceeded your monthly budget!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

@@ -18,10 +18,13 @@ import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
+import java.text.NumberFormat
+import java.util.Locale
 
 class AnalysisFragment : Fragment() {
     private var _binding: FragmentAnalysisBinding? = null
     private val binding get() = _binding!!
+    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,9 +39,14 @@ class AnalysisFragment : Fragment() {
 
         val transactions = PrefsUtils.getTransactions(requireContext())
         
+        // Calculate total income
+        val totalIncome = transactions
+            .filter { it.isIncome }
+            .sumOf { it.amount }
+        
         // Calculate category summaries for expenses
         val expenseSummaries = transactions
-            .filter { !it.isIncome } // Only expenses
+            .filter { !it.isIncome }
             .groupBy { it.category }
             .map { (category, list) ->
                 CategorySummary(
@@ -49,17 +57,36 @@ class AnalysisFragment : Fragment() {
             }
             .sortedByDescending { it.total }
 
-        // Setup RecyclerView
+        // Calculate total expenses
+        val totalExpenses = expenseSummaries.sumOf { it.total }
+        
+        // Calculate net balance
+        val netBalance = totalIncome - totalExpenses
+
+        // Update UI with financial data
+        updateFinancialData(totalIncome, totalExpenses, netBalance)
+
+        // Setup RecyclerView with fixed height
         binding.rvCategories.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = CategoryAdapter(expenseSummaries)
+            isNestedScrollingEnabled = true
         }
 
         // Setup PieChart
-        setupPieChart(expenseSummaries)
+        setupPieChart(expenseSummaries, totalExpenses)
     }
 
-    private fun setupPieChart(summaries: List<CategorySummary>) {
+    private fun updateFinancialData(totalIncome: Double, totalExpenses: Double, netBalance: Double) {
+        binding.tvTotalIncome.text = currencyFormatter.format(totalIncome)
+        binding.tvTotalExpenses.text = currencyFormatter.format(totalExpenses)
+        binding.tvBalance.apply {
+            text = currencyFormatter.format(netBalance)
+            setTextColor(if (netBalance >= 0) Color.parseColor("#4CAF50") else Color.parseColor("#F44336"))
+        }
+    }
+
+    private fun setupPieChart(summaries: List<CategorySummary>, totalExpenses: Double) {
         with(binding.pieChart) {
             // Basic setup
             description.isEnabled = false
@@ -67,7 +94,8 @@ class AnalysisFragment : Fragment() {
             setHoleColor(Color.WHITE)
             transparentCircleRadius = 61f
             setDrawCenterText(true)
-            centerText = "Expenses by Category"
+            centerText = "Total Expenses\n${currencyFormatter.format(totalExpenses)}"
+            setCenterTextSize(14f)
             
             // Enable rotation and animation
             isRotationEnabled = true
@@ -78,9 +106,14 @@ class AnalysisFragment : Fragment() {
             legend.apply {
                 isEnabled = true
                 verticalAlignment = Legend.LegendVerticalAlignment.TOP
-                horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+                horizontalAlignment = Legend.LegendHorizontalAlignment.LEFT
                 orientation = Legend.LegendOrientation.VERTICAL
                 setDrawInside(false)
+                xEntrySpace = 7f
+                yEntrySpace = 5f
+                textSize = 12f
+                isWordWrapEnabled = true
+                maxSizePercent = 0.5f
             }
             
             // Create entries for non-zero values
@@ -89,16 +122,28 @@ class AnalysisFragment : Fragment() {
                 .map { PieEntry(it.total.toFloat(), it.category) }
 
             if (entries.isNotEmpty()) {
-                val dataSet = PieDataSet(entries, "Categories").apply {
-                    colors = ColorTemplate.MATERIAL_COLORS.toList() + ColorTemplate.VORDIPLOM_COLORS.toList()
+                val dataSet = PieDataSet(entries, "").apply {
+                    colors = listOf(
+                        Color.parseColor("#2196F3"), // Blue
+                        Color.parseColor("#4CAF50"), // Green
+                        Color.parseColor("#FFC107"), // Yellow
+                        Color.parseColor("#FF5722"), // Deep Orange
+                        Color.parseColor("#9C27B0")  // Purple
+                    )
                     sliceSpace = 3f
                     selectionShift = 5f
+                    valueLinePart1OffsetPercentage = 80f
+                    valueLinePart1Length = 0.2f
+                    valueLinePart2Length = 0.4f
+                    xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+                    yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+                    valueLineColor = Color.BLACK
                 }
 
                 data = PieData(dataSet).apply {
                     setValueFormatter(PercentFormatter(binding.pieChart))
                     setValueTextSize(11f)
-                    setValueTextColor(Color.WHITE)
+                    setValueTextColor(Color.BLACK)
                 }
             }
             

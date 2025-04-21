@@ -11,7 +11,7 @@ import java.util.Locale
 class CategoryAdapter(private val summaries: List<CategorySummary>) :
     RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-    private val currencyFormatter = NumberFormat.getCurrencyInstance()
+    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
 
     inner class ViewHolder(val binding: CategoryItemBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -24,7 +24,10 @@ class CategoryAdapter(private val summaries: List<CategorySummary>) :
         val summary = summaries[position]
         with(holder.binding) {
             tvCategory.text = summary.category
-            tvTotal.text = currencyFormatter.format(summary.total)
+            tvTotal.apply {
+                text = currencyFormatter.format(summary.total)
+                setTextColor(Color.parseColor("#F44336")) // Red color for expenses
+            }
             tvCount.text = "${summary.count} transactions"
             
             // Add a progress bar or visual indicator of the amount

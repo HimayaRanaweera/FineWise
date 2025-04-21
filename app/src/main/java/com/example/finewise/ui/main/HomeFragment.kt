@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -66,9 +67,7 @@ class HomeFragment : Fragment() {
                 )
             },
             onDelete = { transaction ->
-                transactions.remove(transaction)
-                updateTransactionList()
-                Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
+                showDeleteConfirmationDialog(transaction)
             }
         )
 
@@ -77,6 +76,19 @@ class HomeFragment : Fragment() {
             adapter = this@HomeFragment.adapter
             setHasFixedSize(true)
         }
+    }
+
+    private fun showDeleteConfirmationDialog(transaction: Transaction) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Transaction")
+            .setMessage("Are you sure you want to delete this transaction?")
+            .setPositiveButton("Yes") { _, _ ->
+                transactions.remove(transaction)
+                updateTransactionList()
+                Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("No", null)
+            .show()
     }
 
     private fun loadTransactions() {
