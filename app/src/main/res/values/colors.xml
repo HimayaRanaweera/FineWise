@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="ic_launcher_background">#2196F3</color>
-    <color name="primary">#2196F3</color>
-    <color name="primary_dark">#1976D2</color>
-    <color name="accent">#FF4081</color>
-    <color name="income_green">#4CAF50</color>
-    <color name="expense_red">#F44336</color>
+    <color name="primary">#27374D</color>
+    <color name="primary_dark">#1B2533</color>
+    <color name="primary_light">#9DB2BF</color>
+    <color name="background">#DDE6ED</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="error">#B00020</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_background">#27374D</color>
+    <color name="on_surface">#27374D</color>
+    <color name="secondary">#526D82</color>
+    <color name="on_secondary">#FFFFFF</color>
 </resources>
