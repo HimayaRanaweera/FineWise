@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -116,12 +117,14 @@ class HomeFragment : Fragment() {
 
     private fun setupSpinner() {
         val categories = resources.getStringArray(R.array.categories)
-        binding.spinnerCategory.adapter = ArrayAdapter(
+        val adapter = ArrayAdapter(
             requireContext(),
-            android.R.layout.simple_spinner_item,
+            android.R.layout.simple_dropdown_item_1line,
             categories
-        ).apply { 
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        )
+        (binding.spinnerCategory as? AutoCompleteTextView)?.apply {
+            setAdapter(adapter)
+            setText(categories[0], false)
         }
     }
 
@@ -129,10 +132,10 @@ class HomeFragment : Fragment() {
         binding.btnAdd.setOnClickListener {
             val title = binding.etTitle.text.toString()
             val amountStr = binding.etAmount.text.toString()
-            val category = binding.spinnerCategory.selectedItem.toString()
+            val category = (binding.spinnerCategory as? AutoCompleteTextView)?.text?.toString() ?: ""
             val isIncome = binding.rgType.checkedRadioButtonId == R.id.rb_income
 
-            if (title.isEmpty() || amountStr.isEmpty()) {
+            if (title.isEmpty() || amountStr.isEmpty() || category.isEmpty()) {
                 Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -165,7 +168,8 @@ class HomeFragment : Fragment() {
     private fun clearInputFields() {
         binding.etTitle.text?.clear()
         binding.etAmount.text?.clear()
-        binding.spinnerCategory.setSelection(0)
+        val categories = resources.getStringArray(R.array.categories)
+        (binding.spinnerCategory as? AutoCompleteTextView)?.setText(categories[0], false)
         binding.rgType.check(R.id.rb_income)
     }
 
@@ -190,6 +194,21 @@ class HomeFragment : Fragment() {
                     Toast.makeText(context, "Restore successful", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, "No backup found", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.btnExportText.setOnClickListener {
+            if (checkStoragePermission()) {
+                val filePath = FileUtils.exportTransactionsAsText(requireContext(), transactions)
+                if (filePath != null) {
+                    Toast.makeText(
+                        context,
+                        "Transactions exported to Downloads folder",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    Toast.makeText(context, "Export failed", Toast.LENGTH_SHORT).show()
                 }
             }
         }
