@@ -5,10 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.example.finewise.R
 import com.example.finewise.databinding.FragmentEditTransactionBinding
 import com.example.finewise.model.Transaction
 import com.example.finewise.utils.PrefsUtils
@@ -18,6 +20,7 @@ class EditTransactionFragment : Fragment() {
     private var _binding: FragmentEditTransactionBinding? = null
     private val binding get() = _binding!!
     private val args: EditTransactionFragmentArgs by navArgs()
+    private var currentCategory: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,26 +34,31 @@ class EditTransactionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Setup category spinner
-        val categories = arrayOf("Food", "Transport", "Shopping", "Bills", "Entertainment", "Other")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories)
-        binding.spinnerCategory.adapter = adapter
-
-        // Load transaction data
         val transaction = args.transaction
+        currentCategory = transaction.category
+
+        // Set initial values
         binding.etTitle.setText(transaction.title)
         binding.etAmount.setText(transaction.amount.toString())
-        binding.spinnerCategory.setSelection(categories.indexOf(transaction.category))
         binding.rgType.check(if (transaction.isIncome) binding.rbIncome.id else binding.rbExpense.id)
+
+        // Setup category spinner and selection
+        setupCategorySpinner(transaction.isIncome, transaction.category)
+
+        // Handle transaction type changes
+        binding.rgType.setOnCheckedChangeListener { _, checkedId ->
+            val isIncome = checkedId == binding.rbIncome.id
+            setupCategorySpinner(isIncome, currentCategory)
+        }
 
         // Setup save button
         binding.btnSave.setOnClickListener {
             val title = binding.etTitle.text.toString()
             val amountStr = binding.etAmount.text.toString()
-            val category = binding.spinnerCategory.selectedItem.toString()
+            val category = (binding.spinnerCategory as? AutoCompleteTextView)?.text?.toString() ?: ""
             val isIncome = binding.rgType.checkedRadioButtonId == binding.rbIncome.id
 
-            if (title.isEmpty() || amountStr.isEmpty()) {
+            if (title.isEmpty() || amountStr.isEmpty() || category.isEmpty()) {
                 Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -84,6 +92,30 @@ class EditTransactionFragment : Fragment() {
         // Setup cancel button
         binding.btnCancel.setOnClickListener {
             findNavController().navigateUp()
+        }
+    }
+
+    private fun setupCategorySpinner(isIncome: Boolean, selectedCategory: String) {
+        val categories = resources.getStringArray(
+            if (isIncome) R.array.income_categories else R.array.expense_categories
+        ).toList()
+
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            categories
+        )
+
+        (binding.spinnerCategory as? AutoCompleteTextView)?.apply {
+            setAdapter(adapter)
+            if (categories.contains(selectedCategory)) {
+                setText(selectedCategory, false)
+                currentCategory = selectedCategory
+            } else {
+                setText("", false)
+                currentCategory = ""
+            }
+            hint = "Select category"
         }
     }
 

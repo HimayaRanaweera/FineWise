@@ -1,9 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="categories">
+    <string-array name="income_categories">
+        <item>Salary</item>
+        <item>Contract Work</item>
+        <item>Investment Income</item>
+        <item>Rental</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="expense_categories">
+        <item>Transportation</item>
         <item>Food</item>
-        <item>Transport</item>
-        <item>Bills</item>
-        <item>Entertainment</item>
+        <item>Debt Payment</item>
+        <item>Personal Expense</item>
         <item>Other</item>
     </string-array>
 </resources>

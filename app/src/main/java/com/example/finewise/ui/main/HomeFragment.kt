@@ -116,7 +116,18 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupSpinner() {
-        val categories = resources.getStringArray(R.array.categories)
+        updateCategorySpinner(isIncome = true) // Default to income categories
+        
+        binding.rgType.setOnCheckedChangeListener { _, checkedId ->
+            val isIncome = checkedId == R.id.rb_income
+            updateCategorySpinner(isIncome)
+        }
+    }
+
+    private fun updateCategorySpinner(isIncome: Boolean) {
+        val categories = resources.getStringArray(
+            if (isIncome) R.array.income_categories else R.array.expense_categories
+        )
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
@@ -124,7 +135,8 @@ class HomeFragment : Fragment() {
         )
         (binding.spinnerCategory as? AutoCompleteTextView)?.apply {
             setAdapter(adapter)
-            setText(categories[0], false)
+            setText("", false)
+            hint = "Select category"
         }
     }
 
@@ -168,9 +180,9 @@ class HomeFragment : Fragment() {
     private fun clearInputFields() {
         binding.etTitle.text?.clear()
         binding.etAmount.text?.clear()
-        val categories = resources.getStringArray(R.array.categories)
-        (binding.spinnerCategory as? AutoCompleteTextView)?.setText(categories[0], false)
+        (binding.spinnerCategory as? AutoCompleteTextView)?.setText("", false)
         binding.rgType.check(R.id.rb_income)
+        updateCategorySpinner(isIncome = true)
     }
 
     private fun setupBackupRestoreButtons() {
