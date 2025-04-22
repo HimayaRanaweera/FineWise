@@ -80,9 +80,9 @@ object FileUtils {
     fun exportTransactions(context: Context, transactions: List<Transaction>): Boolean {
         if (!hasStoragePermission(context)) return false
         try {
-            val json = Gson().toJson(transactions)
-            val file = File(context.getExternalFilesDir(null), FILE_NAME)
-            file.writeText(json)
+        val json = Gson().toJson(transactions)
+        val file = File(context.getExternalFilesDir(null), FILE_NAME)
+        file.writeText(json)
             return true
         } catch (e: Exception) {
             e.printStackTrace()
@@ -93,11 +93,11 @@ object FileUtils {
     fun importTransactions(context: Context): List<Transaction> {
         if (!hasStoragePermission(context)) return emptyList()
         try {
-            val file = File(context.getExternalFilesDir(null), FILE_NAME)
-            if (!file.exists()) return emptyList()
-            val json = file.readText()
-            val type = object : TypeToken<List<Transaction>>() {}.type
-            return Gson().fromJson(json, type) ?: emptyList()
+        val file = File(context.getExternalFilesDir(null), FILE_NAME)
+        if (!file.exists()) return emptyList()
+        val json = file.readText()
+        val type = object : TypeToken<List<Transaction>>() {}.type
+        return Gson().fromJson(json, type) ?: emptyList()
         } catch (e: Exception) {
             e.printStackTrace()
             return emptyList()
