@@ -9,6 +9,7 @@ object PrefsUtils {
     private const val PREFS_NAME = "FineWisePrefs"
     private const val KEY_TRANSACTIONS = "transactions"
     private const val KEY_BUDGET = "budget"
+    private const val KEY_CURRENCY = "selected_currency"
 
     fun saveTransactions(context: Context, transactions: List<Transaction>) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -33,5 +34,17 @@ object PrefsUtils {
     fun getBudget(context: Context): Double {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getFloat(KEY_BUDGET, 0f).toDouble()
+    }
+
+    fun saveCurrency(context: Context, currencyCode: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_CURRENCY, currencyCode)
+            .apply()
+    }
+
+    fun getSelectedCurrency(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_CURRENCY, "USD") ?: "USD"
     }
 }

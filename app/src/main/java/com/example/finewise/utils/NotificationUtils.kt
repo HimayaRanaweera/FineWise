@@ -11,6 +11,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.finewise.R
 import java.text.NumberFormat
+import java.util.Currency
 import java.util.Locale
 
 object NotificationUtils {
@@ -38,7 +39,10 @@ object NotificationUtils {
             }
         }
 
-        val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
+        val currencyCode = PrefsUtils.getSelectedCurrency(context)
+        val currencyFormatter = NumberFormat.getCurrencyInstance().apply {
+            currency = Currency.getInstance(currencyCode)
+        }
         val exceededAmount = expenses - budget
         
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)

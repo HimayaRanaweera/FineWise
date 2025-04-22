@@ -7,10 +7,15 @@ import com.example.finewise.databinding.ItemCategorySummaryBinding
 import java.text.NumberFormat
 import java.util.Locale
 
-class CategoryAdapter(private val categories: List<CategorySummary>) :
-    RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+class CategoryAdapter(
+    private val categories: List<CategorySummary>,
+    private var currencyFormatter: NumberFormat = NumberFormat.getCurrencyInstance()
+) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
+    fun updateCurrencyFormatter(formatter: NumberFormat) {
+        currencyFormatter = formatter
+        notifyDataSetChanged()
+    }
 
     inner class ViewHolder(private val binding: ItemCategorySummaryBinding) :
         RecyclerView.ViewHolder(binding.root) {

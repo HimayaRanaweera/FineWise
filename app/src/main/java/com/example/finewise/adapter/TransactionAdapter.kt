@@ -17,7 +17,12 @@ class TransactionAdapter(
 ) : RecyclerView.Adapter<TransactionAdapter.ViewHolder>() {
 
     private val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
+    private var currencyFormatter = NumberFormat.getCurrencyInstance()
+
+    fun updateCurrencyFormatter(formatter: NumberFormat) {
+        currencyFormatter = formatter
+        notifyDataSetChanged()
+    }
 
     inner class ViewHolder(val binding: TransactionItemBinding) : RecyclerView.ViewHolder(binding.root)
 

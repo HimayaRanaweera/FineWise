@@ -23,6 +23,8 @@ import com.example.finewise.databinding.FragmentHomeBinding
 import com.example.finewise.model.Transaction
 import com.example.finewise.utils.FileUtils
 import com.example.finewise.utils.PrefsUtils
+import java.text.NumberFormat
+import java.util.Currency
 import java.util.Date
 
 class HomeFragment : Fragment() {
@@ -30,6 +32,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val transactions = mutableListOf<Transaction>()
     private lateinit var adapter: TransactionAdapter
+    private lateinit var currencyFormatter: NumberFormat
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -42,7 +45,8 @@ class HomeFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -51,18 +55,27 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        setupCurrencyFormatter()
         setupRecyclerView()
         loadTransactions()
         setupSpinner()
         setupButtons()
     }
 
+    private fun setupCurrencyFormatter() {
+        val currencyCode = PrefsUtils.getSelectedCurrency(requireContext())
+        currencyFormatter = NumberFormat.getCurrencyInstance().apply {
+            currency = Currency.getInstance(currencyCode)
+        }
+        if (::adapter.isInitialized) {
+            adapter.updateCurrencyFormatter(currencyFormatter)
+        }
+    }
+
     private fun setupRecyclerView() {
         adapter = TransactionAdapter(
-            transactions,
+            transactions = transactions,
             onEdit = { transaction ->
-                // Navigate to edit fragment
                 findNavController().navigate(
                     HomeFragmentDirections.actionHomeToEditTransaction(transaction)
                 )
@@ -84,7 +97,7 @@ class HomeFragment : Fragment() {
             .setTitle("Delete Transaction")
             .setMessage("Are you sure you want to delete this transaction?")
             .setPositiveButton("Yes") { _, _ ->
-            transactions.remove(transaction)
+                transactions.remove(transaction)
                 updateTransactionList()
                 Toast.makeText(context, "Transaction deleted", Toast.LENGTH_SHORT).show()
             }
@@ -103,7 +116,7 @@ class HomeFragment : Fragment() {
     private fun updateTransactionList() {
         Log.d("HomeFragment", "Updating transaction list. Size: ${transactions.size}")
         adapter.notifyDataSetChanged()
-            PrefsUtils.saveTransactions(requireContext(), transactions)
+        PrefsUtils.saveTransactions(requireContext(), transactions)
         
         // Update visibility of the empty state
         if (transactions.isEmpty()) {
@@ -160,15 +173,13 @@ class HomeFragment : Fragment() {
 
             val newTransaction = Transaction(
                 id = System.currentTimeMillis().toInt(),
-                        title = title,
-                        amount = amount,
-                        category = category,
-                        date = Date(),
-                        isIncome = isIncome
-                    )
-            transactions.add(newTransaction) // Add to the end of the list
-            Log.d("HomeFragment", "Added new transaction. New size: ${transactions.size}")
-
+                title = title,
+                amount = amount,
+                category = category,
+                date = Date(),
+                isIncome = isIncome
+            )
+            transactions.add(newTransaction)
             updateTransactionList()
             clearInputFields()
             Toast.makeText(context, "Transaction added successfully", Toast.LENGTH_SHORT).show()
@@ -228,7 +239,7 @@ class HomeFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Reload transactions when returning from edit screen
+        setupCurrencyFormatter()
         loadTransactions()
     }
 

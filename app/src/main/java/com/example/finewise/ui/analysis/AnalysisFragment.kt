@@ -5,32 +5,29 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.finewise.adapter.CategoryAdapter
 import com.example.finewise.adapter.CategorySummary
 import com.example.finewise.databinding.FragmentAnalysisBinding
+import com.example.finewise.model.Transaction
 import com.example.finewise.utils.PrefsUtils
-import com.github.mikephil.charting.animation.Easing
-import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.formatter.PercentFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import java.text.NumberFormat
-import java.util.Locale
+import java.util.Currency
 
 class AnalysisFragment : Fragment() {
     private var _binding: FragmentAnalysisBinding? = null
     private val binding get() = _binding!!
-    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
+    private lateinit var currencyFormatter: NumberFormat
     private lateinit var categoryAdapter: CategoryAdapter
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentAnalysisBinding.inflate(inflater, container, false)
@@ -39,135 +36,125 @@ class AnalysisFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupCurrencyFormatter()
+        setupRecyclerView()
+        updateUI()
+    }
 
-        val transactions = PrefsUtils.getTransactions(requireContext())
-        
-        // Calculate income summaries
-        val incomeSummaries = transactions
-            .filter { it.isIncome }
-            .groupBy { it.category }
-            .map { (category, list) ->
-                CategorySummary(
-                    category = category,
-                    total = list.sumOf { it.amount },
-                    count = list.size
-                )
-            }
-            .sortedByDescending { it.total }
+    private fun setupCurrencyFormatter() {
+        val currencyCode = PrefsUtils.getSelectedCurrency(requireContext())
+        currencyFormatter = NumberFormat.getCurrencyInstance().apply {
+            currency = Currency.getInstance(currencyCode)
+        }
+        if (::categoryAdapter.isInitialized) {
+            categoryAdapter.updateCurrencyFormatter(currencyFormatter)
+        }
+    }
 
-        // Calculate expense summaries
-        val expenseSummaries = transactions
-            .filter { !it.isIncome }
-            .groupBy { it.category }
-            .map { (category, list) ->
-                CategorySummary(
-                    category = category,
-                    total = list.sumOf { it.amount },
-                    count = list.size
-                )
-            }
-            .sortedByDescending { it.total }
-
-        // Calculate totals
-        val totalIncome = incomeSummaries.sumOf { it.total }
-        val totalExpenses = expenseSummaries.sumOf { it.total }
-        val netBalance = totalIncome - totalExpenses
-
-        // Update UI with financial data
-        updateFinancialData(totalIncome, totalExpenses, netBalance)
-
-        // Setup RecyclerView
+    private fun setupRecyclerView() {
+        categoryAdapter = CategoryAdapter(emptyList(), currencyFormatter)
         binding.rvCategories.apply {
             layoutManager = LinearLayoutManager(context)
-            adapter = CategoryAdapter(expenseSummaries)
-            isNestedScrollingEnabled = false
+            adapter = categoryAdapter
         }
-
-        // Setup charts and show/hide no data messages
-        setupChart(binding.incomeChart, incomeSummaries, totalIncome, "Total Income", binding.tvNoIncome)
-        setupChart(binding.expenseChart, expenseSummaries, totalExpenses, "Total Expenses", binding.tvNoExpense)
     }
 
-    private fun updateFinancialData(totalIncome: Double, totalExpenses: Double, netBalance: Double) {
+    private fun updateUI() {
+        val transactions = PrefsUtils.getTransactions(requireContext())
+        val incomeTransactions = transactions.filter { it.isIncome }
+        val expenseTransactions = transactions.filter { !it.isIncome }
+
+        // Update financial summary
+        val totalIncome = incomeTransactions.sumOf { it.amount }
+        val totalExpenses = expenseTransactions.sumOf { it.amount }
+        val balance = totalIncome - totalExpenses
+
         binding.tvTotalIncome.text = currencyFormatter.format(totalIncome)
         binding.tvTotalExpenses.text = currencyFormatter.format(totalExpenses)
-        binding.tvBalance.apply {
-            text = currencyFormatter.format(netBalance)
-            setTextColor(if (netBalance >= 0) Color.parseColor("#4CAF50") else Color.parseColor("#F44336"))
+        binding.tvBalance.text = currencyFormatter.format(balance)
+
+        // Update income chart
+        if (incomeTransactions.isNotEmpty()) {
+            binding.tvNoIncome.visibility = View.GONE
+            binding.incomeChart.visibility = View.VISIBLE
+            setupChart(incomeTransactions, binding.incomeChart, true)
+        } else {
+            binding.tvNoIncome.visibility = View.VISIBLE
+            binding.incomeChart.visibility = View.GONE
+        }
+
+        // Update expense chart
+        if (expenseTransactions.isNotEmpty()) {
+            binding.tvNoExpense.visibility = View.GONE
+            binding.expenseChart.visibility = View.VISIBLE
+            setupChart(expenseTransactions, binding.expenseChart, false)
+        } else {
+            binding.tvNoExpense.visibility = View.VISIBLE
+            binding.expenseChart.visibility = View.GONE
+        }
+
+        // Update categories RecyclerView with expense summaries only
+        val categorySummaries = getCategorySummaries(expenseTransactions)
+        categoryAdapter = CategoryAdapter(categorySummaries, currencyFormatter)
+        binding.rvCategories.adapter = categoryAdapter
+    }
+
+    private fun setupChart(transactions: List<Transaction>, chart: com.github.mikephil.charting.charts.PieChart, isIncome: Boolean) {
+        val categoryMap = transactions.groupBy { it.category }
+        val entries = categoryMap.map { (category, categoryTransactions) ->
+            val total = categoryTransactions.sumOf { it.amount }
+            PieEntry(total.toFloat(), category)
+        }
+
+        val dataSet = PieDataSet(entries, if (isIncome) "Income" else "Expenses").apply {
+            colors = getChartColors(entries.size)
+            valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return currencyFormatter.format(value.toDouble())
+                }
+            }
+            valueTextSize = 12f
+        }
+
+        chart.apply {
+            data = PieData(dataSet)
+            description.isEnabled = false
+            legend.isEnabled = true
+            setEntryLabelColor(Color.BLACK)
+            animateY(1000)
+            invalidate()
         }
     }
 
-    private fun setupChart(
-        chart: PieChart,
-        summaries: List<CategorySummary>,
-        total: Double,
-        centerText: String,
-        noDataText: TextView
-    ) {
-        // Show/hide no data message
-        noDataText.visibility = if (summaries.isEmpty()) View.VISIBLE else View.GONE
-        
-        chart.apply {
-            description.isEnabled = false
-            isDrawHoleEnabled = true
-            setHoleColor(Color.WHITE)
-            transparentCircleRadius = 61f
-            setDrawCenterText(true)
-            this.centerText = "$centerText\n${currencyFormatter.format(total)}"
-            setCenterTextSize(14f)
-            
-            isRotationEnabled = true
-            isHighlightPerTapEnabled = true
-            animateY(1400, Easing.EaseInOutQuad)
-            
-            legend.apply {
-                isEnabled = true
-                verticalAlignment = Legend.LegendVerticalAlignment.TOP
-                horizontalAlignment = Legend.LegendHorizontalAlignment.LEFT
-                orientation = Legend.LegendOrientation.VERTICAL
-                setDrawInside(false)
-                xEntrySpace = 7f
-                yEntrySpace = 5f
-                textSize = 12f
-                isWordWrapEnabled = true
-                maxSizePercent = 0.5f
+    private fun getCategorySummaries(transactions: List<Transaction>): List<CategorySummary> {
+        return transactions
+            .groupBy { it.category }
+            .map { (category, categoryTransactions) ->
+                CategorySummary(
+                    category = category,
+                    total = categoryTransactions.sumOf { it.amount },
+                    count = categoryTransactions.size
+                )
             }
-            
-            val entries = summaries
-                .filter { it.total > 0 }
-                .map { PieEntry(it.total.toFloat(), it.category) }
+            .sortedByDescending { it.total }
+    }
 
-            if (entries.isNotEmpty()) {
-                val dataSet = PieDataSet(entries, "").apply {
-                    colors = listOf(
-                        Color.parseColor("#2196F3"),
-                        Color.parseColor("#4CAF50"),
-                        Color.parseColor("#FFC107"),
-                        Color.parseColor("#FF5722"),
-                        Color.parseColor("#9C27B0")
-                    )
-                    sliceSpace = 3f
-                    selectionShift = 5f
-                    valueLinePart1OffsetPercentage = 80f
-                    valueLinePart1Length = 0.2f
-                    valueLinePart2Length = 0.4f
-                    xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
-                    yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
-                    valueLineColor = Color.BLACK
-                }
-
-                val pieData = PieData(dataSet).apply {
-                    setValueFormatter(PercentFormatter())
-                    setValueTextSize(11f)
-                    setValueTextColor(Color.BLACK)
-                }
-                
-                setUsePercentValues(true)
-                data = pieData
-            }
-            
-            invalidate()
+    private fun getChartColors(size: Int): List<Int> {
+        val colors = mutableListOf<Int>()
+        for (i in 0 until size) {
+            colors.add(Color.rgb(
+                (Math.random() * 255).toInt(),
+                (Math.random() * 255).toInt(),
+                (Math.random() * 255).toInt()
+            ))
         }
+        return colors
+    }
+
+    override fun onResume() {
+        super.onResume()
+        setupCurrencyFormatter()
+        updateUI()
     }
 
     override fun onDestroyView() {
