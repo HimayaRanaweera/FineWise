@@ -107,7 +107,7 @@ class AnalysisFragment : Fragment() {
         }
 
         val dataSet = PieDataSet(entries, if (isIncome) "Income" else "Expenses").apply {
-            colors = getChartColors(entries.size)
+            colors = getChartColors(entries.size, isIncome)
             valueFormatter = object : ValueFormatter() {
                 override fun getFormattedValue(value: Float): String {
                     return currencyFormatter.format(value.toDouble())
@@ -139,16 +139,25 @@ class AnalysisFragment : Fragment() {
             .sortedByDescending { it.total }
     }
 
-    private fun getChartColors(size: Int): List<Int> {
-        val colors = mutableListOf<Int>()
-        for (i in 0 until size) {
-            colors.add(Color.rgb(
-                (Math.random() * 255).toInt(),
-                (Math.random() * 255).toInt(),
-                (Math.random() * 255).toInt()
-            ))
+    private fun getChartColors(size: Int, isIncome: Boolean): List<Int> {
+        val colors = if (isIncome) {
+            listOf(
+                Color.rgb(76, 175, 80),   // Green
+                Color.rgb(129, 199, 132), // Light Green
+                Color.rgb(165, 214, 167), // Lighter Green
+                Color.rgb(200, 230, 201), // Very Light Green
+                Color.rgb(232, 245, 233)  // Lightest Green
+            )
+        } else {
+            listOf(
+                Color.rgb(244, 67, 54),   // Red
+                Color.rgb(239, 154, 154), // Light Red
+                Color.rgb(229, 115, 115), // Lighter Red
+                Color.rgb(239, 83, 80),   // Very Light Red
+                Color.rgb(255, 205, 210)  // Lightest Red
+            )
         }
-        return colors
+        return colors.take(size)
     }
 
     override fun onResume() {
