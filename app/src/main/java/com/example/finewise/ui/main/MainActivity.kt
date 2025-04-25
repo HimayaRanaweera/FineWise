@@ -29,10 +29,10 @@ class MainActivity : AppCompatActivity() {
         val bottomNav = binding.bottomNav
         bottomNav.setupWithNavController(navController)
 
-        // Define top level destinations
+        /* Define top level destinations
         val appBarConfiguration = AppBarConfiguration(
             setOf(R.id.fragment_home, R.id.fragment_analysis, R.id.fragment_budget)
-        )
+        )*/
 
         // Handle navigation item selection
         bottomNav.setOnItemSelectedListener { item ->
