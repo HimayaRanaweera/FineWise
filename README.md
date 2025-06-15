@@ -1,0 +1,2 @@
+FineWise – Personal Finance Tracker
+A mobile app developed using Kotlin in Android Studio for managing personal finances. It allows users to track income and expenses, set budgets, and visualize spending through pie charts. Data is securely stored using SharedPreferences, with features for backup, restore, and export. Built as part of my MAD Lab Test 2, the app offers a clean UI and practical tools for effective financial management.
